@@ -27,6 +27,7 @@
 #include "sha512_test.h"
 #include "ecdsa_test.h"
 #include "ecdh_test.h"
+#include "rsa_test.h"
 
 using namespace utest::v1;
 
@@ -479,6 +480,71 @@ void test_case_psk_with_aes_256_cbc_sha384_ciphersuite() {
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, sha256_result, "SHA512 test failed");
 }
 #endif
+
+#if (MBED_CONF_MBEDTLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256)
+void test_case_ecdhe_rsa_with_aes_128_cbc_sha256_ciphersuite() {
+    mbedtls_ssl_context ssl;
+    mbedtls_ssl_config conf;
+
+
+    mbedtls_ssl_init( &ssl );
+    mbedtls_ssl_config_defaults(&conf, MBEDTLS_SSL_IS_CLIENT, MBEDTLS_SSL_TRANSPORT_STREAM, 0);
+    ssl.conf = &conf;
+
+    const int *ciphersuites = ssl.conf->ciphersuite_list[ssl.minor_ver];
+
+    int found = 0;
+    for( int i = 0; ciphersuites[i] != 0; i++ ) {
+        if (ciphersuites[i] == MBEDTLS_TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) {
+            found = 1;
+        }
+    }
+
+    int aes_cbc_result = mbedtls_aes_cbc_test(0);
+    int sha256_result = mbedtls_sha256_self_test2(0);
+    int ecdh_result = mbedtls_ecdh_test(0);
+    int rsa_result = mbedtls_config_rsa_test(0);
+
+    TEST_ASSERT_EQUAL_INT_MESSAGE(1, found, "ECDHE_RSA_WITH_AES_128_CBC_SHA256 not found in ciphersuites");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, aes_cbc_result, "AES-CBC test failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, sha256_result, "SHA256 test failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ecdh_result, "ECDH test failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, rsa_result, "RSA test failed");
+}
+#endif
+
+#if (MBED_CONF_MBEDTLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256)
+void test_case_ecdhe_rsa_with_aes_128_gcm_sha256_ciphersuite() {
+    mbedtls_ssl_context ssl;
+    mbedtls_ssl_config conf;
+
+
+    mbedtls_ssl_init( &ssl );
+    mbedtls_ssl_config_defaults(&conf, MBEDTLS_SSL_IS_CLIENT, MBEDTLS_SSL_TRANSPORT_STREAM, 0);
+    ssl.conf = &conf;
+
+    const int *ciphersuites = ssl.conf->ciphersuite_list[ssl.minor_ver];
+
+    int found = 0;
+    for( int i = 0; ciphersuites[i] != 0; i++ ) {
+        if (ciphersuites[i] == MBEDTLS_TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) {
+            found = 1;
+        }
+    }
+
+    int aes_gcm_result = mbedtls_gcm_self_test2(0);
+    int sha256_result = mbedtls_sha256_self_test2(0);
+    int ecdh_result = mbedtls_ecdh_test(0);
+    int rsa_result = mbedtls_config_rsa_test(0);
+
+    TEST_ASSERT_EQUAL_INT_MESSAGE(1, found, "ECDHE_RSA_WITH_AES_128_GCM_SHA256 not found in ciphersuites");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, aes_gcm_result, "AES-GCM test failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, sha256_result, "SHA256 test failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ecdh_result, "ECDH test failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, rsa_result, "RSA test failed");
+}
+#endif
+
 utest::v1::status_t greentea_failure_handler(const Case *const source, const failure_t reason) {
     greentea_case_failure_abort_handler(source, reason);
     return STATUS_CONTINUE;
@@ -529,6 +595,12 @@ Case cases[] = {
 #endif
 #if (MBED_CONF_MBEDTLS_PSK_WITH_AES_256_CBC_SHA384)
     Case("MbedTLS Config: PSK_WITH_AES_256_CBC_SHA384 ciphersuite", test_case_psk_with_aes_256_cbc_sha384_ciphersuite, greentea_failure_handler),
+#endif
+#if (MBED_CONF_MBEDTLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256)
+    Case("MbedTLS Config: ECDHE_RSA_WITH_AES_128_CBC_SHA256 ciphersuite", test_case_ecdhe_rsa_with_aes_128_cbc_sha256_ciphersuite, greentea_failure_handler),
+#endif
+#if (MBED_CONF_MBEDTLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256)
+    Case("MbedTLS Config: ECDHE_RSA_WITH_AES_128_GCM_SHA256 ciphersuite", test_case_ecdhe_rsa_with_aes_128_gcm_sha256_ciphersuite, greentea_failure_handler),
 #endif
 };
 
